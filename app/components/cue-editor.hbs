@@ -22,6 +22,7 @@
   <section class="show-strip">
     <PaperInput @label="演出名称" @value={{this.show.title}} @onChange={{this.updateShowTitle}} class="show-title-input" />
     <div class="show-stats">
+      <span><strong>{{this.show.acts.length}}</strong> 幕</span>
       <span><strong>{{this.show.scenes.length}}</strong> 场次</span>
       <span><strong>{{this.allCues.length}}</strong> 条提示</span>
       <span><strong>{{this.errors}}</strong> 项阻塞</span>
@@ -34,16 +35,29 @@
   <main class="stage-workspace">
     <aside class="scene-rail paper-surface">
       <div class="rail-heading">
-        <div><small>SCENES</small><h2>幕次与场次</h2></div>
-        <PaperButton @iconButton={{true}} @primary={{true}} @onClick={{this.addScene}} @title="新增场次">＋</PaperButton>
+        <div><small>ACTS &amp; SCENES</small><h2>幕次与场次</h2></div>
+        <div class="rail-heading-actions">
+          <PaperButton @iconButton={{true}} @onClick={{this.addAct}} @title="新增幕">幕＋</PaperButton>
+          <PaperButton @iconButton={{true}} @primary={{true}} @onClick={{this.addScene}} @title="新增场次">＋</PaperButton>
+        </div>
       </div>
       <div class="scene-list">
-        {{#each this.filteredScenes as |scene|}}
-          <button type="button" class="scene-item {{if scene.active "is-active"}}" {{on "click" (fn this.selectScene scene.id)}}>
-            <span class="act-name">{{scene.act}}</span>
-            <strong>{{scene.name}} · {{scene.title}}</strong>
-            <small>{{scene.startTime}} · {{scene.cues.length}} 条 · {{scene.issueCount}} 项检查</small>
-          </button>
+        {{#each this.actGroups as |group|}}
+          <div class="act-group">
+            <div class="act-group-head">
+              <strong>{{group.act.name}}</strong>
+              <small>{{group.scenes.length}} 场 · 整幕 {{group.durationLabel}}</small>
+              {{#if group.act.changeover}}<small class="changeover-tag">开场前换景 {{group.act.changeover}} 秒</small>{{/if}}
+            </div>
+            {{#each group.scenes as |scene|}}
+              <button type="button" class="scene-item {{if scene.active "is-active"}}" {{on "click" (fn this.selectScene scene.id)}}>
+                <strong>{{scene.name}} · {{scene.title}}</strong>
+                <small>{{scene.startTime}} · {{scene.cues.length}} 条 · {{scene.issueCount}} 项检查</small>
+              </button>
+            {{else}}
+              <p class="empty-copy">本幕还没有场次</p>
+            {{/each}}
+          </div>
         {{else}}
           <p class="empty-copy">未找到场次</p>
         {{/each}}
@@ -56,11 +70,25 @@
 
     <section class="cue-board">
       {{#if this.activeScene}}
+        {{#if this.activeAct}}
+          <div class="act-bar paper-surface">
+            <div class="act-bar-heading">
+              <small>ACT</small>
+              <h2>幕设置</h2>
+            </div>
+            <PaperInput @label="幕名" @value={{this.activeAct.name}} @onChange={{fn this.updateActField "name"}} />
+            <PaperInput @label="本幕开场前换景（秒）" @type="number" @value={{this.activeAct.changeover}} @onChange={{fn this.updateActField "changeover"}} />
+            <div class="act-bar-stats">
+              <span><strong>{{this.activeActGroup.scenes.length}}</strong> 场</span>
+              <span>整幕时长 <strong>{{this.activeActGroup.durationLabel}}</strong></span>
+            </div>
+          </div>
+        {{/if}}
         <div class="board-heading paper-surface">
           <div>
             <small>ACTIVE SCENE</small>
             <div class="scene-title-edit">
-              <PaperInput @value={{this.activeScene.act}} @onChange={{fn this.updateSceneField "act"}} />
+              <PaperSelect @label="所属幕" @options={{this.actOptions}} @optionLabelPath="name" @selected={{this.activeAct}} @onChange={{this.moveSceneToAct}} />
               <PaperInput @value={{this.activeScene.name}} @onChange={{fn this.updateSceneField "name"}} />
               <PaperInput @value={{this.activeScene.title}} @onChange={{fn this.updateSceneField "title"}} />
             </div>
@@ -187,12 +215,12 @@
         </div>
         <div class="issue-list">
           {{#each this.issues as |issue|}}
-            <button type="button" class="issue-item severity-{{issue.severity}}" {{on "click" (fn this.selectCue issue.cueId)}}>
+            <button type="button" class="issue-item severity-{{issue.severity}}" {{on "click" (fn this.locateIssue issue)}}>
               <span class="issue-icon">{{if issue.icon issue.icon "i"}}</span>
               <span><strong>{{issue.title}}</strong><small>{{issue.detail}}</small></span>
             </button>
           {{else}}
-            <div class="all-clear"><span>✓</span><p>未发现时间、负责人、撞场或失效引用问题。</p></div>
+            <div class="all-clear"><span>✓</span><p>未发现时间、负责人、撞场、换景或失效引用问题。</p></div>
           {{/each}}
         </div>
       </section>

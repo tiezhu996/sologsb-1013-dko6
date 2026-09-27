@@ -15,9 +15,16 @@ export interface Cue {
   offset: number;
 }
 
+export interface Act {
+  id: string;
+  name: string;
+  /** 本幕开场前需要预留的换景秒数 */
+  changeover: number;
+}
+
 export interface Scene {
   id: string;
-  act: string;
+  actId: string;
   name: string;
   title: string;
   startTime: string;
@@ -29,6 +36,7 @@ export interface ShowData {
   title: string;
   venue: string;
   date: string;
+  acts: Act[];
   scenes: Scene[];
   updatedAt: string;
 }
