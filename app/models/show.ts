@@ -17,7 +17,7 @@ export interface Cue {
 
 export interface Scene {
   id: string;
-  act: string;
+  actId: string;
   name: string;
   title: string;
   startTime: string;
@@ -25,10 +25,18 @@ export interface Scene {
   cues: Cue[];
 }
 
+export interface Act {
+  id: string;
+  name: string;
+  /** 本幕开场前需要预留的换景秒数（上一幕散场后计时） */
+  changeoverSeconds: number;
+}
+
 export interface ShowData {
   title: string;
   venue: string;
   date: string;
+  acts: Act[];
   scenes: Scene[];
   updatedAt: string;
 }
@@ -72,5 +80,12 @@ export interface VersionDiff {
   after: string;
 }
 
-export const CUE_KINDS: CueKind[] = ['灯光', '音响', '道具', '演员', '舞台', '字幕'];
+export const CUE_KINDS: CueKind[] = [
+  '灯光',
+  '音响',
+  '道具',
+  '演员',
+  '舞台',
+  '字幕',
+];
 export const OWNERS = ['李岚', '周启', '陈默', '赵一帆', '孙禾', '待指定'];
